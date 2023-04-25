@@ -70,43 +70,17 @@ int main(int argc, char *argv[])
   server.sin_addr.s_addr= inet_addr(argv[1]);;
   bzero(&server.sin_zero, 8);
 
-  char messageBuffer[MAX_STRING_LENGTH+1]="";
-  char serverReply[MAX_STRING_LENGTH+1]="";
-  int len=0;
-
   pthread_create(&controlador, NULL, control, NULL);
 
-  while (true)
-  {
-//     cout<<"Please enter the input to send to the server: "<<endl;
-//     cin.getline(messageBuffer, MAX_STRING_LENGTH);
-//
-//     if (strcmp(messageBuffer, "exit")==0)
-//      break;
-//
-//     if (sendto(sock_fd, (void*) messageBuffer, (size_t) strlen(messageBuffer)+1, 0, (sockaddr *) &server, sizeof(server))==-1)
-//     {
-//      perror("sendto: ");
-//      continue;
-//     }
-//
-//     if (recvfrom(sock_fd, (void*) serverReply, (size_t) (MAX_STRING_LENGTH+1), MSG_WAITALL, (sockaddr *) &server, (socklen_t*) &len)==-1)
-//     {
-//      perror("recvfrom:");
-//      continue;
-//     }
-//
-//     cout<<"The server sent: "<<serverReply<<endl<<endl;
-
-
+  while (true){
      // Represent data
      if(accelerometer_alive && color_sensor_alive){
-    	 if(atomic_load(&color_sensor_data_ready)) {
+    	 if(atomic_load(&color_sensor_data_ready) == 1) {
     		 atomic_exchange(&color_sensor_data_ready, 0);
     		 represent_color_sensor_data = 1;
     		 sprintf(copy_color_sensor_msg, color_sensor_msg);
     	 }
-    	 if(atomic_load(&acc_data_ready)) {
+    	 if(atomic_load(&acc_data_ready) == 1) {
     		 atomic_exchange(&acc_data_ready, 0);
     		 represent_acc_data = 1;
     		 copy_acc_values[0] = ax;
@@ -114,8 +88,8 @@ int main(int argc, char *argv[])
     		 copy_acc_values[2] = az;
     	 }
     	 if(represent_color_sensor_data && represent_acc_data){
-    		 printf("Acceleration: x = %.2f, y = %.2f, z = %.2f\r", copy_acc_values[0], copy_acc_values[1], copy_acc_values[2]);
-    		 printf("%s", copy_color_sensor_msg);
+//    		 printf("Acceleration: x = %.2f, y = %.2f, z = %.2f\r", copy_acc_values[0], copy_acc_values[1], copy_acc_values[2]);
+//    		 printf("%s", copy_color_sensor_msg);
     		 fflush(stdout);
     		 represent_acc_data = represent_color_sensor_data = 0;
     		 send_data.flags = 3;								// accelerometer alive && color sensor alive
@@ -129,11 +103,14 @@ int main(int argc, char *argv[])
     		 if(sendto(sock_fd, buffer, sizeof(buffer), 0, (sockaddr*)&server, sizeof(server))==-1)// Send to the server
     		 {
     			 printf("**********ERROR**********");
+    		 } else{
+//    			 cout << "Enviado mensaje acc y color " << endl;
     		 }
     	 }
      }
      if(accelerometer_alive && !color_sensor_alive){
-    	 if(atomic_load(&acc_data_ready)){
+    	 if(atomic_load(&acc_data_ready) == 1){
+    		 atomic_exchange(&acc_data_ready, 0);
     		 printf("Acceleration: x = %.2f, y = %.2f, z = %.2f\r", ax, ay, az);
     		 fflush(stdout);
 
@@ -146,10 +123,12 @@ int main(int argc, char *argv[])
     		 char buffer[sizeof(t_send_data)];
     		 memcpy(buffer, reinterpret_cast<char*>(&send_data), sizeof(t_send_data));		// Serialize the structure
     		 sendto(sock_fd, buffer, sizeof(buffer), 0, (sockaddr*)&server, sizeof(server));// Send to the server
+//    		 cout << "Enviado mensaje acc"<< endl;
     	 }
      }
      if(color_sensor_alive && !accelerometer_alive){
-    	 if(atomic_load(&color_sensor_data_ready)){
+    	 if(atomic_load(&color_sensor_data_ready) == 1){
+    		 atomic_exchange(&color_sensor_data_ready, 0);
     		 printf("%s", color_sensor_msg);
 
     		 send_data.flags = 2;								// !accelerometer alive && color sensor alive
@@ -161,7 +140,7 @@ int main(int argc, char *argv[])
     		 char buffer[sizeof(t_send_data)];
     		 memcpy(buffer, reinterpret_cast<char*>(&send_data), sizeof(t_send_data));		// Serialize the structure
     		 sendto(sock_fd, buffer, sizeof(buffer), 0, (sockaddr*)&server, sizeof(server));// Send to the server
-
+//    		 cout << "Enviado mensaje color" << endl;
     	 }
     	 fflush(stdout);
      }
