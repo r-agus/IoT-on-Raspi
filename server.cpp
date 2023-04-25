@@ -37,7 +37,7 @@ typedef struct{
 char color_sensor_msg[1500];
 
 void generate_color_sensor_msg(t_rcv_data data);
-
+void print_accel_msg(t_rcv_data data);
   /*
   This thread is used for terminate the thread
   */
@@ -118,15 +118,16 @@ int main(int argc, char *argv[])
 
 		if(data.flags & 0x03){
 			generate_color_sensor_msg(data);
-			printf("Acceleration: x = %.2f, y = %.2f, z = %.2f\r", data.acceleration.acc_x, data.acceleration.acc_y, data.acceleration.acc_z);
+			print_accel_msg(data);
 			printf("%s", color_sensor_msg);
 			fflush(stdout);
 		}
 		else if(data.flags & 0x01){
-			printf("Acceleration: x = %.2f, y = %.2f, z = %.2f\r", data.acceleration.acc_x, data.acceleration.acc_y, data.acceleration.acc_z);
+			print_accel_msg(data);
 			fflush(stdout);
 		}
 		else if(data.flags & 0x02){
+			generate_color_sensor_msg(data);
 			printf("%s", color_sensor_msg);
 			fflush(stdout);
 		}
@@ -156,4 +157,8 @@ void generate_color_sensor_msg(t_rcv_data data){
 	(data.flags & 0x10) ? strcat(color_sensor_msg, "\n\033[38;2;0;0;255mIR > BLUE   \r\033[2A\033[38;2;255;255;255m")
 			: strcat(color_sensor_msg, tmp);  // Set foreground color to blue and write blue value
 
+}
+
+void print_accel_msg(t_rcv_data data){
+	printf("Acceleration: x = %.2f, y = %.2f, z = %.2f\r", data.acceleration.acc_x, data.acceleration.acc_y, data.acceleration.acc_z);
 }
