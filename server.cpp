@@ -44,7 +44,9 @@ void print_accel_msg(t_rcv_data data);
 void* terminatorThread(void*)
 {
 	char a;
+	printf("Waiting for a client to extract and represent data \n\r");
 	cout<<"Enter any key and press enter to shut down the server: "<<endl;
+	printf("\n\r");
 	cin>>a;
 	close(sock_fd);
     printf("\033[2J");      // Erase the screen
@@ -99,9 +101,8 @@ int main(int argc, char *argv[])
 		exit(-1);
 	}
 	
-    printf("\033[2J");      	  // Erase the screen
+//    printf("\033[2J");      	  // Erase the screen
 	printf("\033[?25l");          // Command to hide cursor
-	
 	char messageBuffer[sizeof(t_rcv_data)];
 	/*
 	This loop is used to recieve data and represent them on the terminal
@@ -116,34 +117,41 @@ int main(int argc, char *argv[])
 			perror("recvfrom:");
 			continue;
 		}
-		
+		printf("\033[2J");
 		printf("\033[H");		// Return to (0,0) position
-		printf("---------------------------------------------------------------------");
+		printf("---------------------------------------------------------------------\n\r");
 		
+		cout<<"Enter any key and press enter to shut down the server: "<<endl;
+		printf("\n\r");
+
 		// Deserialize data
 		memcpy(reinterpret_cast<char*>(&data), messageBuffer, sizeof(t_rcv_data));
 
 		cout<<"Data Received from client ("<<inet_ntoa(client.sin_addr)<<"):  "<<messageBuffer<<endl<<endl;
-
+		//printf("\n");
 		if(data.flags & 0x03){
 			generate_color_sensor_msg(data);
 			print_accel_msg(data);
-			printf("%s", color_sensor_msg);
-			fflush(stdout);
+
+			printf("\n");
+			printf("%s\n", color_sensor_msg);
+			//printf("\033[3F");
+			printf("\n\n---------------------------------------------------------------------");
 		}
 		else if(data.flags & 0x01){
 			print_accel_msg(data);
-			printf("\033[3F");		// Move the cursor at the beginning of next line, 3 lines down
-			fflush(stdout);
+			printf("\n");
+			printf("\033[3F");		// Move the cursor at the beginning of next line, 4 lines down
 		}
 		else if(data.flags & 0x02){
-			printf("\033[1F");		// Move the cursor at the beginning of next line, 1 line down
+			printf("\033[1F");		// Move the cursor at the beginning of next line, 2 line down
+			printf("\n");		
 			generate_color_sensor_msg(data);
 			printf("%s", color_sensor_msg);
-			fflush(stdout);
 		}
-		printf("---------------------------------------------------------------------");
-		sleep(1);		// Wait 1 second to execute again the loop
+		//printf("---------------------------------------------------------------------");
+		fflush(stdout);
+		//sleep(1);		// Wait 1 second to execute again the loop
 		
 		
 //		if (sendto(sock_fd, (void*) messageBuffer, (size_t) strlen(messageBuffer)+1, 0, (sockaddr*) &client, (socklen_t) len)==-1)
@@ -174,5 +182,5 @@ void generate_color_sensor_msg(t_rcv_data data){
 }
 
 void print_accel_msg(t_rcv_data data){
-	printf("Acceleration: x = %.2f, y = %.2f, z = %.2f\n", data.acceleration.acc_x, data.acceleration.acc_y, data.acceleration.acc_z);
+	printf("Acceleration: x = %.2f, y = %.2f, z = %.2f\n\r", data.acceleration.acc_x, data.acceleration.acc_y, data.acceleration.acc_z);
 }
