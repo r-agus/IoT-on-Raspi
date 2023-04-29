@@ -44,9 +44,12 @@ char color_sensor_msg[1500] = "";
 
 t_raw_color		raw_colors 	= {0};
 t_proc_color	proc_colors	= {0};
-t_send_data 	send_data = {0};
+t_send_data 	send_data[10] = {0};
 
 pthread_t controlador;
+
+int cnt_send = 0;					// Counter for sending data
+
 
 int main(int argc, char *argv[])
 {
@@ -88,23 +91,19 @@ int main(int argc, char *argv[])
     		 copy_acc_values[2] = az;
     	 }
     	 if(represent_color_sensor_data && represent_acc_data){
-//    		 printf("Acceleration: x = %.2f, y = %.2f, z = %.2f\r", copy_acc_values[0], copy_acc_values[1], copy_acc_values[2]);
-//    		 printf("%s", copy_color_sensor_msg);
     		 fflush(stdout);
     		 represent_acc_data = represent_color_sensor_data = 0;
-    		 send_data.flags = 3;								// accelerometer alive && color sensor alive
-    		 send_data.color = proc_colors;
-    		 send_data.acceleration.acc_x = ax;
-    		 send_data.acceleration.acc_y = ay;
-    		 send_data.acceleration.acc_z = az;
+    		 send_data[cnt_send].flags = 3;								// accelerometer alive && color sensor alive
+    		 send_data[cnt_send].color = proc_colors;
+    		 send_data[cnt_send].acceleration.acc_x = ax;
+    		 send_data[cnt_send].acceleration.acc_y = ay;
+    		 send_data[cnt_send].acceleration.acc_z = az;
 
     		 char buffer[sizeof(t_send_data)];
-    		 memcpy(buffer, reinterpret_cast<char*>(&send_data), sizeof(t_send_data));		// Serialize the structure
+    		 memcpy(buffer, reinterpret_cast<char*>(&send_data), sizeof(send_data));		// Serialize the structure
     		 if(sendto(sock_fd, buffer, sizeof(buffer), 0, (sockaddr*)&server, sizeof(server))==-1)// Send to the server
     		 {
     			 printf("**********ERROR**********");
-    		 } else{
-//    			 cout << "Enviado mensaje acc y color " << endl;
     		 }
     	 }
      }
@@ -114,16 +113,15 @@ int main(int argc, char *argv[])
     		 printf("Acceleration: x = %.2f, y = %.2f, z = %.2f\r", ax, ay, az);
     		 fflush(stdout);
 
-    		 send_data.flags = 1;								// accelerometer alive && !color sensor alive
-    		 send_data.color = {0};
-    		 send_data.acceleration.acc_x = ax;
-    		 send_data.acceleration.acc_y = ay;
-    		 send_data.acceleration.acc_z = az;
+    		 send_data[cnt_send].flags = 1;								// accelerometer alive && !color sensor alive
+    		 send_data[cnt_send].color = {0};
+    		 send_data[cnt_send].acceleration.acc_x = ax;
+    		 send_data[cnt_send].acceleration.acc_y = ay;
+    		 send_data[cnt_send].acceleration.acc_z = az;
 
     		 char buffer[sizeof(t_send_data)];
     		 memcpy(buffer, reinterpret_cast<char*>(&send_data), sizeof(t_send_data));		// Serialize the structure
     		 sendto(sock_fd, buffer, sizeof(buffer), 0, (sockaddr*)&server, sizeof(server));// Send to the server
-//    		 cout << "Enviado mensaje acc"<< endl;
     	 }
      }
      if(color_sensor_alive && !accelerometer_alive){
@@ -131,16 +129,15 @@ int main(int argc, char *argv[])
     		 atomic_exchange(&color_sensor_data_ready, 0);
     		 printf("%s", color_sensor_msg);
 
-    		 send_data.flags = 2;								// !accelerometer alive && color sensor alive
-    		 send_data.color = proc_colors;
-    		 send_data.acceleration.acc_x = 0;
-    		 send_data.acceleration.acc_y = 0;
-    		 send_data.acceleration.acc_z = 0;
+    		 send_data[cnt_send].flags = 2;								// !accelerometer alive && color sensor alive
+    		 send_data[cnt_send].color = proc_colors;
+    		 send_data[cnt_send].acceleration.acc_x = 0;
+    		 send_data[cnt_send].acceleration.acc_y = 0;
+    		 send_data[cnt_send].acceleration.acc_z = 0;
 
     		 char buffer[sizeof(t_send_data)];
     		 memcpy(buffer, reinterpret_cast<char*>(&send_data), sizeof(t_send_data));		// Serialize the structure
     		 sendto(sock_fd, buffer, sizeof(buffer), 0, (sockaddr*)&server, sizeof(server));// Send to the server
-//    		 cout << "Enviado mensaje color" << endl;
     	 }
     	 fflush(stdout);
      }
