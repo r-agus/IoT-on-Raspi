@@ -46,7 +46,8 @@ t_raw_color		raw_colors 	= {0};
 t_proc_color	proc_colors	= {0};
 t_send_data 	send_data[10] = {0};
 
-pthread_t controlador;
+
+pthread_t controlador, timer;
 
 int cnt_send = 0;					// Counter for sending data
 
