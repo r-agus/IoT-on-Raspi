@@ -8,6 +8,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <iostream>
+
+#include <cmath>
 using namespace std;
 
 #define MAX_STRING_LENGTH 100
@@ -23,6 +25,12 @@ typedef struct{
 	float red, green, blue;		// RGB values
 }t_proc_color;
 
+typedef struct{
+	float mean;
+	float maximum;
+	float minimum;
+	float deviation;
+}t_staditical;
 
 /*
 	This structure is used for represent data of accelerometer and color sensor. 
@@ -34,10 +42,23 @@ typedef struct{
 	t_acc_data acceleration;
 }t_rcv_data;
 
+/*
+	0: X acceleration 	1: Y acceleration   2: Z acceleration
+	3: Infrarred		4: Clear			5: RED
+	6: GREEN			7: BLUE
+*/
+t_staditical result_calculations[8];
 char color_sensor_msg[1500];
 
 void generate_color_sensor_msg(t_rcv_data data);
 void print_accel_msg(t_rcv_data data);
+
+void calc_stadistics(t_rcv_data data_raw, t_staditical processed_data[]);
+float calc_mean(float data_raw[]);			// Change to array
+float calc_maximum(float data_raw[]);			// Change to array
+float calc_minimum(float data_raw[]);			// Change to array
+float calc_deviation(float data_raw[]);		// Change to array
+
   /*
   This thread is used for terminate the thread
   */
@@ -58,7 +79,8 @@ void* terminatorThread(void*)
 int main(int argc, char *argv[])
 {
 	t_rcv_data data;
-
+	t_staditical_data data_processed;
+	
 	if (argc==1)
 	{
 		cout<<"Please pass the port number on which you want the server to listen."<<endl;
@@ -184,3 +206,51 @@ void generate_color_sensor_msg(t_rcv_data data){
 void print_accel_msg(t_rcv_data data){
 	printf("Acceleration: x = %.2f, y = %.2f, z = %.2f\n\r", data.acceleration.acc_x, data.acceleration.acc_y, data.acceleration.acc_z);
 }
+
+/*
+		To be tested
+*/
+void calc_stadistics(t_rcv_data data_raw, t_staditical processed_data[]){			// Change to array
+
+	for( int i = 0; i < 8: i++ ){
+		processed_data[i].mean = calc_mean()
+		processed_data[i].maximum = calc_maximum()
+		processed_data[i].minimum = calc_minimum()
+		processed_data[i].deviation = calc_deviation()
+	}
+
+
+]
+
+float calc_mean(float data_raw[]){
+	float sum;
+	for(int i = 0; i < 10; i++){
+		sum = data_raw[i];
+	}
+	return sum/10;
+}
+
+float calc_maximum(float data_raw[]){
+	float max = data_raw[0];
+	for(int i = 1; i < 0; i++){
+		max = (max > data_raw[i]) ? max : data_raw[i];
+	}
+	return max;
+}
+float calc_minimum(float data_raw[]){
+	float min = data_raw[0];
+	for(int i = 1; i < 0; i++){
+		min = (min < data_raw[i]) ? min : data_raw[i];
+	}
+	return min;
+}
+float calc_deviation(float data_raw[], float mean){
+	float deviation;
+	
+	for(i = 0; i < 10; i++) {
+		deviation += pow(data[i] - mean, 2);
+	}
+	return sqrt(deviation / 10);
+}
+
+
