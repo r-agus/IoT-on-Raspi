@@ -25,12 +25,6 @@ typedef struct{
 	float red, green, blue;		// RGB values
 }t_proc_color;
 
-typedef struct{
-	float mean;
-	float maximum;
-	float minimum;
-	float deviation;
-}t_staditical;
 
 /*
 	This structure is used for represent data of accelerometer and color sensor. 
@@ -43,21 +37,28 @@ typedef struct{
 }t_rcv_data;
 
 /*
-	0: X acceleration 	1: Y acceleration   2: Z acceleration
-	3: Infrarred		4: Clear			5: RED
-	6: GREEN			7: BLUE
+typedef struct{
+	float mean;
+	float maximum;
+	float minimum;
+	float deviation;
+}t_staditical;
 */
+
+t_rcv_data data[10];
 t_staditical result_calculations[8];
+t_rcv_data data_mean, data_max, data_min, data_deviation;
+
 char color_sensor_msg[1500];
 
 void generate_color_sensor_msg(t_rcv_data data);
 void print_accel_msg(t_rcv_data data);
 
-void calc_stadistics(t_rcv_data data_raw, t_staditical processed_data[]);
-float calc_mean(float data_raw[]);			// Change to array
-float calc_maximum(float data_raw[]);			// Change to array
-float calc_minimum(float data_raw[]);			// Change to array
-float calc_deviation(float data_raw[]);		// Change to array
+void calc_stadistics(t_rcv_data data_raw[]);
+t_rcv_data calc_mean(t_rcv_data data_raw[]);
+t_rcv_data calc_maximum(t_rcv_data data_raw[]);
+t_rcv_data calc_minimum(t_rcv_data data_raw[]);
+void calc_deviation(t_rcv_data data_raw[], t_rcv_data mean);
 
   /*
   This thread is used for terminate the thread
@@ -210,47 +211,79 @@ void print_accel_msg(t_rcv_data data){
 /*
 		To be tested
 */
-void calc_stadistics(t_rcv_data data_raw, t_staditical processed_data[]){			// Change to array
+void calc_stadistics(t_rcv_data data_raw[]){
 
-	for( int i = 0; i < 8: i++ ){
-		processed_data[i].mean = calc_mean()
-		processed_data[i].maximum = calc_maximum()
-		processed_data[i].minimum = calc_minimum()
-		processed_data[i].deviation = calc_deviation()
-	}
-
+	data_mean = calc_mean(data_raw);
+	data_max = calc_maximum(data_raw);
+	data_min = calc_minimum(data_raw);
+	calc_deviation(data_raw, data_mean);
 
 ]
 
-float calc_mean(float data_raw[]){
-	float sum;
+t_rcv_data calc_mean(t_rcv_data data_raw[]){
+	t_rcv_data sum;
 	for(int i = 0; i < 10; i++){
-		sum = data_raw[i];
+		sum += data_raw[i];
 	}
 	return sum/10;
 }
 
-float calc_maximum(float data_raw[]){
-	float max = data_raw[0];
+t_rcv_data calc_maximum(t_rcv_data data_raw[]){
+	t_rcv_data max = data_raw[0];
 	for(int i = 1; i < 0; i++){
-		max = (max > data_raw[i]) ? max : data_raw[i];
+		max.acceleration.acc_x = (max.acceleration.acc_x > data_raw[i].acceleration.acc_x) ? max.acceleration.acc_x : data_raw[i].acceleration.acc_x;
+		max.acceleration.acc_y = (max.acceleration.acc_y > data_raw[i].acceleration.acc_y) ? max.acceleration.acc_y : data_raw[i].acceleration.acc_y;
+		max.acceleration.acc_z = (max.acceleration.acc_z > data_raw[i].acceleration.acc_z) ? max.acceleration.acc_z : data_raw[i].acceleration.acc_z;
+		
+		max.color.ir 	= (max.color.ir 	> data_raw[i].color.ir		) 	? max.color.ir 		: data_raw[i].color.ir;
+		max.color.clear = (max.color.clear 	> data_raw[i].color.clear	) 	? max.color.clear 	: data_raw[i].color.clear;
+		max.color.red 	= (max.color.red 	> data_raw[i].color.red		) 	? max.color.red 	: data_raw[i].color.red;
+		max.color.green = (max.color.green 	> data_raw[i].color.green	) 	? max.color.green 	: data_raw[i].color.green;
+		max.color.blue 	= (max.color.blue 	> data_raw[i].color.blue	) 	? max.color.blue 	: data_raw[i].color.blue;
+	
 	}
 	return max;
 }
-float calc_minimum(float data_raw[]){
-	float min = data_raw[0];
+t_rcv_data calc_minimum(t_rcv_data data_raw[]){
+	t_rcv_data min = data_raw[0];
 	for(int i = 1; i < 0; i++){
-		min = (min < data_raw[i]) ? min : data_raw[i];
+		min.acceleration.acc_x = (min.acceleration.acc_x > data_raw[i].acceleration.acc_x) ? min.acceleration.acc_x : data_raw[i].acceleration.acc_x;
+		min.acceleration.acc_y = (min.acceleration.acc_y > data_raw[i].acceleration.acc_y) ? min.acceleration.acc_y : data_raw[i].acceleration.acc_y;
+		min.acceleration.acc_z = (min.acceleration.acc_z > data_raw[i].acceleration.acc_z) ? min.acceleration.acc_z : data_raw[i].acceleration.acc_z;
+		
+		min.color.ir 	= (min.color.ir 	> data_raw[i].color.ir		) 	? min.color.ir 		: data_raw[i].color.ir;
+		min.color.clear = (min.color.clear 	> data_raw[i].color.clear	) 	? min.color.clear 	: data_raw[i].color.clear;
+		min.color.red 	= (min.color.red 	> data_raw[i].color.red		) 	? min.color.red 	: data_raw[i].color.red;
+		min.color.green = (min.color.green 	> data_raw[i].color.green	) 	? min.color.green 	: data_raw[i].color.green;
+		min.color.blue 	= (min.color.blue 	> data_raw[i].color.blue	) 	? min.color.blue 	: data_raw[i].color.blue;
 	}
 	return min;
 }
-float calc_deviation(float data_raw[], float mean){
-	float deviation;
+void calc_deviation(t_rcv_data data_raw[], t_rcv_data mean){
 	
 	for(i = 0; i < 10; i++) {
-		deviation += pow(data[i] - mean, 2);
+		data_deviation.acceleration.acc_x += pow(data_raw[i].acceleration.acc_x - mean.acceleration.acc_x, 2);
+		data_deviation.acceleration.acc_y += pow(data_raw[i].acceleration.acc_y - mean.acceleration.acc_y, 2);
+		data_deviation.acceleration.acc_z += pow(data_raw[i].acceleration.acc_z - mean.acceleration.acc_z, 2);
+		
+		data_deviation.color.ir 	+= pow(data_raw[i].color.ir 	- mean.color.ir, 	2);
+		data_deviation.color.clear 	+= pow(data_raw[i].color.clear 	- mean.color.clear, 2);
+		data_deviation.color.red 	+= pow(data_raw[i].color.red 	- mean.color.red, 	2);
+		data_deviation.color.green 	+= pow(data_raw[i].color.green 	- mean.color.green, 2);
+		data_deviation.color.blue 	+= pow(data_raw[i].color.blue 	- mean.color.blue, 	2);
 	}
-	return sqrt(deviation / 10);
+	
+	data_deviation.acceleration.acc_x = sqrt(deviation.acceleration.acc_x / 10);
+	data_deviation.acceleration.acc_y = sqrt(deviation.acceleration.acc_y / 10);
+	data_deviation.acceleration.acc_z = sqrt(deviation.acceleration.acc_z / 10);
+	
+	data_deviation.color.ir = sqrt(deviation.color.ir / 10);
+	data_deviation.color.clear = sqrt(deviation.color.clear / 10);
+	data_deviation.color.red = sqrt(deviation.color.red / 10);
+	data_deviation.color.green = sqrt(deviation.color.green / 10);
+	data_deviation.color.blue = sqrt(deviation.color.blue / 10);
+	
+	return sqrt(data_deviation / 10);
 }
 
 
