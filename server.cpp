@@ -25,7 +25,6 @@ typedef struct{
 	float red, green, blue;		// RGB values
 }t_proc_color;
 
-
 /*
 	This structure is used for represent data of accelerometer and color sensor. 
 	It also has some flags used to choose what want to represent
@@ -35,15 +34,6 @@ typedef struct{
 	t_proc_color color;
 	t_acc_data acceleration;
 }t_rcv_data;
-
-/*
-typedef struct{
-	float mean;
-	float maximum;
-	float minimum;
-	float deviation;
-}t_staditical;
-*/
 
 t_rcv_data data[10];
 t_rcv_data data_mean, data_max, data_min, data_deviation;
@@ -215,12 +205,10 @@ void print_accel_msg(t_rcv_data data){
 		To be tested
 */
 void calc_stadistics(t_rcv_data data_raw[]){
-
 	data_mean = calc_mean(data_raw);
 	data_max = calc_maximum(data_raw);
 	data_min = calc_minimum(data_raw);
 	calc_deviation(data_raw, data_mean);
-
 ]
 
 t_rcv_data calc_mean(t_rcv_data data_raw[]){
@@ -243,7 +231,6 @@ t_rcv_data calc_maximum(t_rcv_data data_raw[]){
 		max.color.red 	= (max.color.red 	> data_raw[i].color.red		) 	? max.color.red 	: data_raw[i].color.red;
 		max.color.green = (max.color.green 	> data_raw[i].color.green	) 	? max.color.green 	: data_raw[i].color.green;
 		max.color.blue 	= (max.color.blue 	> data_raw[i].color.blue	) 	? max.color.blue 	: data_raw[i].color.blue;
-	
 	}
 	return max;
 }
@@ -275,7 +262,6 @@ void calc_deviation(t_rcv_data data_raw[], t_rcv_data mean){
 		data_deviation.color.green 	+= pow(data_raw[i].color.green 	- mean.color.green, 2);
 		data_deviation.color.blue 	+= pow(data_raw[i].color.blue 	- mean.color.blue, 	2);
 	}
-	
 	data_deviation.acceleration.acc_x = sqrt(deviation.acceleration.acc_x / 10);
 	data_deviation.acceleration.acc_y = sqrt(deviation.acceleration.acc_y / 10);
 	data_deviation.acceleration.acc_z = sqrt(deviation.acceleration.acc_z / 10);
@@ -285,8 +271,6 @@ void calc_deviation(t_rcv_data data_raw[], t_rcv_data mean){
 	data_deviation.color.red = sqrt(deviation.color.red / 10);
 	data_deviation.color.green = sqrt(deviation.color.green / 10);
 	data_deviation.color.blue = sqrt(deviation.color.blue / 10);
-	
-	return sqrt(data_deviation / 10);
 }
 
 void print_stadistics(t_rcv_data mean, t_rcv_data max, t_rcv_data min, t_rcv_data deviation){
