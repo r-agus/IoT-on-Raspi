@@ -49,7 +49,7 @@ t_rcv_data calc_maximum(t_rcv_data data_raw[]);
 t_rcv_data calc_minimum(t_rcv_data data_raw[]);
 void calc_deviation(t_rcv_data data_raw[], t_rcv_data mean);
 
-void print_stadistics(t_rcv_data mean, t_rcv_data max, t_rcv_data min, t_rcv_data deviation);
+void print_stadistics(t_rcv_data mean, t_rcv_data max, t_rcv_data min, t_rcv_data deviation, t_rcv_data data);
 
   /*
   This thread is used for terminate the thread
@@ -129,7 +129,6 @@ int main(int argc, char *argv[])
 			perror("recvfrom:");
 			continue;
 		}
-		printf("\033[2J");
 		printf("\033[H");		// Return to (0,0) position
 		printf("---------------------------------------------------------------------\n\r");
 		
@@ -162,7 +161,7 @@ int main(int argc, char *argv[])
 		}
 */
 		calc_stadistics(data);
-		print_stadistics(data_mean, data_max, data_min, data_deviation);
+		print_stadistics(data_mean, data_max, data_min, data_deviation, data[9]);
 		fflush(stdout);
 
 		
@@ -211,15 +210,15 @@ void calc_stadistics(t_rcv_data data_raw[]){
 t_rcv_data calc_mean(t_rcv_data data_raw[]){
 	t_rcv_data sum;
 	for(int i = 0; i < 10; i++){
-		sum.acceleration.acc_x += data_raw[i].acceleration.acc_x;
-		sum.acceleration.acc_y += data_raw[i].acceleration.acc_y;
-		sum.acceleration.acc_z += data_raw[i].acceleration.acc_z;
+		sum.acceleration.acc_x = sum.acceleration.acc_x + data_raw[i].acceleration.acc_x;
+		sum.acceleration.acc_y = sum.acceleration.acc_y + data_raw[i].acceleration.acc_y;
+		sum.acceleration.acc_z = sum.acceleration.acc_z + data_raw[i].acceleration.acc_z;
 
-		sum.color.ir 	+= data_raw[i].color.ir;
-		sum.color.clear += data_raw[i].color.clear;
-		sum.color.red 	+= data_raw[i].color.red;
-		sum.color.green += data_raw[i].color.green;
-		sum.color.blue 	+= data_raw[i].color.blue;
+		sum.color.ir 	= sum.color.ir + data_raw[i].color.ir;
+		sum.color.clear = sum.color.clear + data_raw[i].color.clear;
+		sum.color.red 	= sum.color.red + data_raw[i].color.red;
+		sum.color.green = sum.color.green + data_raw[i].color.green;
+		sum.color.blue 	= sum.color.blue + data_raw[i].color.blue;
 
 	}
 	sum.acceleration.acc_x = sum.acceleration.acc_x/10;
@@ -288,49 +287,108 @@ void calc_deviation(t_rcv_data data_raw[], t_rcv_data mean){
 	data_deviation.color.blue = sqrt(data_deviation.color.blue / 10);
 }
 
-void print_stadistics(t_rcv_data mean, t_rcv_data max, t_rcv_data min, t_rcv_data deviation){
+void print_stadistics(t_rcv_data mean, t_rcv_data max, t_rcv_data min, t_rcv_data deviation,  t_rcv_data data){
 	/*  Mean messages  */
-	printf("Mean\n\r Acceleration: \n\r");
-	printf("X: %.2f / Y: %.2f / Z: %.2f\n\r", mean.acceleration.acc_x, mean.acceleration.acc_y, mean.acceleration.acc_z);
+	printf("Mean\n\r");
+	if(data.flags & 0x03){
+		printf("Acceleration: \n\r");
+		printf("X: %.2f / Y: %.2f / Z: %.2f\n\r", mean.acceleration.acc_x, mean.acceleration.acc_y, mean.acceleration.acc_z);
 
-	printf("Colors: \033[?25l \n\r");
-	printf("\033[38;2;255;0;0mR: %.0f  \n\r", mean.color.red);
-	printf("\033[38;2;0;255;0mG: %.0f   \n\r", mean.color.green);
-	printf("\n\033[38;2;0;0;255mB: %.0f  \n\r", mean.color.blue);
-	printf("\033[2A\033[38;2;255;255;255m");
+		printf("Colors: \033[?25l \n\r");
+		printf("\033[38;2;255;0;0mR: %.0f  \n\r", mean.color.red);
+		printf("\033[38;2;0;255;0mG: %.0f  \n\r", mean.color.green);
+		printf("\033[38;2;0;0;255mB: %.0f  \n\r", mean.color.blue);
+		printf("\033[38;2;255;255;255m");
 
-	printf("\n---------------------------------------------------------------------");
-	/*  Maximum messages  */
-	printf("Maximum\n\r Acceleration: \n\r");
-	printf("X: %.2f / Y: %.2f / Z: %.2f\n\r", max.acceleration.acc_x, max.acceleration.acc_y, max.acceleration.acc_z);
+		printf("\n---------------------------------------------------------------------\n");
+		/*  Maximum messages  */
+		printf("Maximum\n\r");
+		printf("X: %.2f / Y: %.2f / Z: %.2f\n\r", max.acceleration.acc_x, max.acceleration.acc_y, max.acceleration.acc_z);
 
-	printf("Colors: \033[?25l \n\r");
-	printf("\033[38;2;255;0;0mR: %.0f  \n\r", max.color.red);
-	printf("\033[38;2;0;255;0mG: %.0f   \n\r", max.color.green);
-	printf("\n\033[38;2;0;0;255mB: %.0f  \n\r", max.color.blue);
-	printf("\033[2A\033[38;2;255;255;255m");
+		printf("Colors: \033[?25l \n\r");
+		printf("\033[38;2;255;0;0mR: %.0f  \n\r", max.color.red);
+		printf("\033[38;2;0;255;0mG: %.0f  \n\r", max.color.green);
+		printf("\033[38;2;0;0;255mB: %.0f  \n\r", max.color.blue);
+		printf("\033[38;2;255;255;255m");
 
-	printf("\n---------------------------------------------------------------------");
-	/*  Minimum messages  */
-	printf("Minimum\n\r Acceleration: \n\r");
-	printf("X: %.2f / Y: %.2f / Z: %.2f\n\r", min.acceleration.acc_x, min.acceleration.acc_y, min.acceleration.acc_z);
+		printf("\n---------------------------------------------------------------------\n");
+		/*  Minimum messages  */
+		printf("Minimum\n\r");
+		printf("X: %.2f / Y: %.2f / Z: %.2f\n\r", min.acceleration.acc_x, min.acceleration.acc_y, min.acceleration.acc_z);
 
-	printf("Colors: \033[?25l \n\r");
-	printf("\033[38;2;255;0;0mR: %.0f  \n\r", min.color.red);
-	printf("\033[38;2;0;255;0mG: %.0f   \n\r", min.color.green);
-	printf("\n\033[38;2;0;0;255mB: %.0f  \n\r", min.color.blue);
-	printf("\033[2A\033[38;2;255;255;255m");
+		printf("Colors: \033[?25l \n\r");
+		printf("\033[38;2;255;0;0mR: %.0f  \n\r", min.color.red);
+		printf("\033[38;2;0;255;0mG: %.0f  \n\r", min.color.green);
+		printf("\033[38;2;0;0;255mB: %.0f  \n\r", min.color.blue);
+		printf("\033[38;2;255;255;255m");
 
-	printf("\n---------------------------------------------------------------------");
-	/*  Stantard Deviation messages  */
-	printf("Standard Deviation: \n\r Acceleration: \n\r");
-	printf("X: %.2f / Y: %.2f / Z: %.2f\n\r", deviation.acceleration.acc_x, deviation.acceleration.acc_y, deviation.acceleration.acc_z);
+		printf("\n---------------------------------------------------------------------\n");
+		/*  Stantard Deviation messages  */
+		printf("Standard Deviation \n\r");
+		printf("X: %.2f / Y: %.2f / Z: %.2f\n\r", deviation.acceleration.acc_x, deviation.acceleration.acc_y, deviation.acceleration.acc_z);
 
-	printf("Colors: \033[?25l \n\r");
-	printf("\033[38;2;255;0;0mR: %.0f  \n\r", deviation.color.red);
-	printf("\033[38;2;0;255;0mG: %.0f   \n\r", deviation.color.green);
-	printf("\n\033[38;2;0;0;255mB: %.0f  \n\r", deviation.color.blue);
-	printf("\033[2A\033[38;2;255;255;255m");
+		printf("Colors: \033[?25l \n\r");
+		printf("\033[38;2;255;0;0mR: %.0f  \n\r", deviation.color.red);
+		printf("\033[38;2;0;255;0mG: %.0f  \n\r", deviation.color.green);
+		printf("\033[38;2;0;0;255mB: %.0f  \n\r", deviation.color.blue);
+		printf("\033[38;2;255;255;255m");
 
-	printf("\n---------------------------------------------------------------------");
+		printf("\n---------------------------------------------------------------------\n");
+	}
+	
+	else if(data.flags & 0x02){
+		printf("Colors: \033[?25l \n\r");
+		printf("\033[38;2;255;0;0mR: %.0f  \n\r", mean.color.red);
+		printf("\033[38;2;0;255;0mG: %.0f  \n\r", mean.color.green);
+		printf("\033[38;2;0;0;255mB: %.0f  \n\r", mean.color.blue);
+		printf("\033[38;2;255;255;255m");
+
+		printf("\n---------------------------------------------------------------------\n");
+		/*  Maximum messages  */
+		printf("Colors: \033[?25l \n\r");
+		printf("\033[38;2;255;0;0mR: %.0f  \n\r", max.color.red);
+		printf("\033[38;2;0;255;0mG: %.0f  \n\r", max.color.green);
+		printf("\033[38;2;0;0;255mB: %.0f  \n\r", max.color.blue);
+		printf("\033[38;2;255;255;255m");
+
+		printf("\n---------------------------------------------------------------------\n");
+		/*  Minimum messages  */
+		printf("Colors: \033[?25l \n\r");
+		printf("\033[38;2;255;0;0mR: %.0f  \n\r", min.color.red);
+		printf("\033[38;2;0;255;0mG: %.0f  \n\r", min.color.green);
+		printf("\033[38;2;0;0;255mB: %.0f  \n\r", min.color.blue);
+		printf("\033[38;2;255;255;255m");
+
+		printf("\n---------------------------------------------------------------------\n");
+		/*  Stantard Deviation messages  */
+		printf("Colors: \033[?25l \n\r");
+		printf("\033[38;2;255;0;0mR: %.0f  \n\r", deviation.color.red);
+		printf("\033[38;2;0;255;0mG: %.0f  \n\r", deviation.color.green);
+		printf("\033[38;2;0;0;255mB: %.0f  \n\r", deviation.color.blue);
+		printf("\033[38;2;255;255;255m");
+
+		printf("\n---------------------------------------------------------------------\n");
+	}
+	
+	else if(data.flags & 0x01){
+		printf("Acceleration: \n\r");
+		printf("X: %.2f / Y: %.2f / Z: %.2f\n\r", mean.acceleration.acc_x, mean.acceleration.acc_y, mean.acceleration.acc_z);
+
+		printf("\n---------------------------------------------------------------------\n");
+		/*  Maximum messages  */
+		printf("Maximum\n\r");
+		printf("X: %.2f / Y: %.2f / Z: %.2f\n\r", max.acceleration.acc_x, max.acceleration.acc_y, max.acceleration.acc_z);
+
+		printf("\n---------------------------------------------------------------------\n");
+		/*  Minimum messages  */
+		printf("Minimum\n\r");
+		printf("X: %.2f / Y: %.2f / Z: %.2f\n\r", min.acceleration.acc_x, min.acceleration.acc_y, min.acceleration.acc_z);
+
+		printf("\n---------------------------------------------------------------------\n");
+		/*  Stantard Deviation messages  */
+		printf("Standard Deviation \n\r");
+		printf("X: %.2f / Y: %.2f / Z: %.2f\n\r", deviation.acceleration.acc_x, deviation.acceleration.acc_y, deviation.acceleration.acc_z);
+
+		printf("\n---------------------------------------------------------------------\n");
+	}
 }
