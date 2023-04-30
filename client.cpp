@@ -1,6 +1,7 @@
 #include "controlador.h"
 #include "accelerometer.h"
 #include "color_sensor.h"
+#include "ticker.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,6 +31,7 @@ typedef struct{
 	t_acc_data acceleration;
 }t_send_data;
 
+Ticker tick;
 
 extern atomic<int> color_sensor_data_ready, acc_data_ready;
 char copy_color_sensor_msg[1500];
@@ -76,6 +78,10 @@ int main(int argc, char *argv[])
 
   pthread_create(&controlador, NULL, control, NULL);
 
+  // Starts the ticker on a separate thread
+  thread tickerThread([&tick] {tick.start();});
+
+
   while (true){
      // Represent data
      if(accelerometer_alive && color_sensor_alive){
@@ -94,7 +100,10 @@ int main(int argc, char *argv[])
     	 if(represent_color_sensor_data && represent_acc_data){
     		 fflush(stdout);
     		 represent_acc_data = represent_color_sensor_data = 0;
-    		 send_data[cnt_send].flags = 3;								// accelerometer alive && color sensor alive
+
+			 cnt_send = tick.getCount();
+    		 
+			 send_data[cnt_send].flags = 3;								// accelerometer alive && color sensor alive
     		 send_data[cnt_send].color = proc_colors;
     		 send_data[cnt_send].acceleration.acc_x = ax;
     		 send_data[cnt_send].acceleration.acc_y = ay;
@@ -114,6 +123,8 @@ int main(int argc, char *argv[])
     		 printf("Acceleration: x = %.2f, y = %.2f, z = %.2f\r", ax, ay, az);
     		 fflush(stdout);
 
+			 cnt_send = tick.getCount();
+
     		 send_data[cnt_send].flags = 1;								// accelerometer alive && !color sensor alive
     		 send_data[cnt_send].color = {0};
     		 send_data[cnt_send].acceleration.acc_x = ax;
@@ -129,6 +140,8 @@ int main(int argc, char *argv[])
     	 if(atomic_load(&color_sensor_data_ready) == 1){
     		 atomic_exchange(&color_sensor_data_ready, 0);
     		 printf("%s", color_sensor_msg);
+			
+			 cnt_send = tick.getCount();
 
     		 send_data[cnt_send].flags = 2;								// !accelerometer alive && color sensor alive
     		 send_data[cnt_send].color = proc_colors;
