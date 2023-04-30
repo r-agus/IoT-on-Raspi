@@ -46,7 +46,6 @@ typedef struct{
 */
 
 t_rcv_data data[10];
-t_staditical result_calculations[8];
 t_rcv_data data_mean, data_max, data_min, data_deviation;
 
 char color_sensor_msg[1500];
@@ -59,6 +58,8 @@ t_rcv_data calc_mean(t_rcv_data data_raw[]);
 t_rcv_data calc_maximum(t_rcv_data data_raw[]);
 t_rcv_data calc_minimum(t_rcv_data data_raw[]);
 void calc_deviation(t_rcv_data data_raw[], t_rcv_data mean);
+
+void print_stadistics(t_rcv_data mean, t_rcv_data max, t_rcv_data min, t_rcv_data deviation);
 
   /*
   This thread is used for terminate the thread
@@ -151,7 +152,7 @@ int main(int argc, char *argv[])
 		memcpy(reinterpret_cast<char*>(&data), messageBuffer, sizeof(t_rcv_data));
 
 		cout<<"Data Received from client ("<<inet_ntoa(client.sin_addr)<<"):  "<<messageBuffer<<endl<<endl;
-		//printf("\n");
+/*
 		if(data.flags & 0x03){
 			generate_color_sensor_msg(data);
 			print_accel_msg(data);
@@ -172,9 +173,11 @@ int main(int argc, char *argv[])
 			generate_color_sensor_msg(data);
 			printf("%s", color_sensor_msg);
 		}
-		//printf("---------------------------------------------------------------------");
+*/		
+		calc_stadistics(data);
+		print_stadistics(data_mean, data_max, data_min, data_deviation);
 		fflush(stdout);
-		//sleep(1);		// Wait 1 second to execute again the loop
+
 		
 		
 //		if (sendto(sock_fd, (void*) messageBuffer, (size_t) strlen(messageBuffer)+1, 0, (sockaddr*) &client, (socklen_t) len)==-1)
@@ -286,4 +289,49 @@ void calc_deviation(t_rcv_data data_raw[], t_rcv_data mean){
 	return sqrt(data_deviation / 10);
 }
 
-
+void print_stadistics(t_rcv_data mean, t_rcv_data max, t_rcv_data min, t_rcv_data deviation){
+	/*  Mean messages  */
+	printf("Mean\n\r Acceleration: \n\r");
+	printf("X: %.2f / Y: %.2f / Z: %.2f\n\r", mean.acceleration.acc_x, mean.acceleration.acc_y, mean.acceleration.acc_z);
+	
+	printf("Colors: \033[?25l \n\r");
+	printf("\033[38;2;255;0;0mR: %.0f  \n\r", mean.color.red);
+	printf("\033[38;2;0;255;0mG: %.0f   \n\r", mean.color.green);
+	printf("\n\033[38;2;0;0;255mB: %.0f  \n\r", mean.color.blue);
+	printf("\033[2A\033[38;2;255;255;255m");
+	
+	printf("\n---------------------------------------------------------------------");
+	/*  Maximum messages  */
+	printf("Maximum\n\r Acceleration: \n\r");
+	printf("X: %.2f / Y: %.2f / Z: %.2f\n\r", max.acceleration.acc_x, max.acceleration.acc_y, max.acceleration.acc_z);
+	
+	printf("Colors: \033[?25l \n\r");
+	printf("\033[38;2;255;0;0mR: %.0f  \n\r", max.color.red);
+	printf("\033[38;2;0;255;0mG: %.0f   \n\r", max.color.green);
+	printf("\n\033[38;2;0;0;255mB: %.0f  \n\r", max.color.blue);
+	printf("\033[2A\033[38;2;255;255;255m");
+	
+	printf("\n---------------------------------------------------------------------");
+	/*  Minimum messages  */
+	printf("Minimum\n\r Acceleration: \n\r");
+	printf("X: %.2f / Y: %.2f / Z: %.2f\n\r", min.acceleration.acc_x, min.acceleration.acc_y, min.acceleration.acc_z);
+	
+	printf("Colors: \033[?25l \n\r");
+	printf("\033[38;2;255;0;0mR: %.0f  \n\r", min.color.red);
+	printf("\033[38;2;0;255;0mG: %.0f   \n\r", min.color.green);
+	printf("\n\033[38;2;0;0;255mB: %.0f  \n\r", min.color.blue);
+	printf("\033[2A\033[38;2;255;255;255m");
+	
+	printf("\n---------------------------------------------------------------------");
+	/*  Stantard Deviation messages  */
+	printf("Standard Deviation: \n\r Acceleration: \n\r");
+	printf("X: %.2f / Y: %.2f / Z: %.2f\n\r", deviation.acceleration.acc_x, deviation.acceleration.acc_y, deviation.acceleration.acc_z);
+	
+	printf("Colors: \033[?25l \n\r");
+	printf("\033[38;2;255;0;0mR: %.0f  \n\r", deviation.color.red);
+	printf("\033[38;2;0;255;0mG: %.0f   \n\r", deviation.color.green);
+	printf("\n\033[38;2;0;0;255mB: %.0f  \n\r", deviation.color.blue);
+	printf("\033[2A\033[38;2;255;255;255m");
+	
+	printf("\n---------------------------------------------------------------------");
+}
