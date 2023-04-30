@@ -14,7 +14,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <pthread.h>
-
+#include <bitset>
 #include <atomic>
 
 using namespace std;
@@ -108,19 +108,21 @@ int main(int argc, char *argv[])
     		 send_data[cnt_send].acceleration.acc_x = ax;
     		 send_data[cnt_send].acceleration.acc_y = ay;
     		 send_data[cnt_send].acceleration.acc_z = az;
-
-    		 char buffer[sizeof(t_send_data)];
+			 
+			 if(cnt_send == 9){
+    		 char buffer[sizeof(send_data)];
     		 memcpy(buffer, reinterpret_cast<char*>(&send_data), sizeof(send_data));		// Serialize the structure
-    		 if(sendto(sock_fd, buffer, sizeof(buffer), 0, (sockaddr*)&server, sizeof(server))==-1)// Send to the server
-    		 {
-    			 printf("**********ERROR**********");
-    		 }
+    		 	if(sendto(sock_fd, buffer, sizeof(buffer), 0, (sockaddr*)&server, sizeof(server))==-1)// Send to the server
+    		 	{
+    				 printf("**********ERROR**********");
+    		 	}
+			 }
     	 }
      }
      if(accelerometer_alive && !color_sensor_alive){
     	 if(atomic_load(&acc_data_ready) == 1){
     		 atomic_exchange(&acc_data_ready, 0);
-    		 printf("Acceleration: x = %.2f, y = %.2f, z = %.2f\r", ax, ay, az);
+//    		 printf("Acceleration: x = %.2f, y = %.2f, z = %.2f\r", ax, ay, az);
     		 fflush(stdout);
 
 			 cnt_send = tick.getCount();
@@ -130,16 +132,18 @@ int main(int argc, char *argv[])
     		 send_data[cnt_send].acceleration.acc_x = ax;
     		 send_data[cnt_send].acceleration.acc_y = ay;
     		 send_data[cnt_send].acceleration.acc_z = az;
-
-    		 char buffer[sizeof(t_send_data)];
-    		 memcpy(buffer, reinterpret_cast<char*>(&send_data), sizeof(t_send_data));		// Serialize the structure
-    		 sendto(sock_fd, buffer, sizeof(buffer), 0, (sockaddr*)&server, sizeof(server));// Send to the server
-    	 }
+			
+			if(cnt_send == 9){
+	    		 char buffer[sizeof(send_data)];
+    			 memcpy(buffer, reinterpret_cast<char*>(&send_data), sizeof(send_data));		// Serialize the structure
+    			 sendto(sock_fd, buffer, sizeof(buffer), 0, (sockaddr*)&server, sizeof(server));// Send to the server
+			}
+		 }
      }
      if(color_sensor_alive && !accelerometer_alive){
     	 if(atomic_load(&color_sensor_data_ready) == 1){
     		 atomic_exchange(&color_sensor_data_ready, 0);
-    		 printf("%s", color_sensor_msg);
+//    		 printf("%s", color_sensor_msg);
 			
 			 cnt_send = tick.getCount();
 
@@ -149,10 +153,28 @@ int main(int argc, char *argv[])
     		 send_data[cnt_send].acceleration.acc_y = 0;
     		 send_data[cnt_send].acceleration.acc_z = 0;
 
-    		 char buffer[sizeof(t_send_data)];
-    		 memcpy(buffer, reinterpret_cast<char*>(&send_data), sizeof(t_send_data));		// Serialize the structure
-    		 sendto(sock_fd, buffer, sizeof(buffer), 0, (sockaddr*)&server, sizeof(server));// Send to the server
-    	 }
+			if(cnt_send == 9){
+	    		 char buffer[sizeof(send_data)];
+    			 memcpy(buffer, reinterpret_cast<char*>(&send_data), sizeof(send_data));		// Serialize the structure
+    			 sendto(sock_fd, buffer, sizeof(buffer), 0, (sockaddr*)&server, sizeof(server));// Send to the server
+				
+				for(int i = 0; i < 10; i++) cout << endl;
+				cout << "Message sent: " << endl;
+				for(int i = 0; i < 9; i++){
+					cout << "******** acceleration ********" << endl;
+					cout << "x: " << send_data[i].acceleration.acc_x << " y: " << send_data[i].acceleration.acc_y << " z: " << send_data[i].acceleration.acc_z << endl;
+					cout << endl;
+
+					cout << "******** colors ********" << endl;
+					cout << " R: " << send_data[i].color.red << " G: " << send_data[i].color.green << " B: " << send_data[i].color.blue << " IR: " << send_data[i].color.ir << endl;
+					cout << endl;
+
+					cout << "******** flags ********" << endl;
+					cout << bitset<8>(send_data[i].flags) << endl;
+					cout << endl;
+				}
+			}
+		 }
     	 fflush(stdout);
      }
 
