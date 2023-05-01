@@ -49,6 +49,7 @@ t_rcv_data calc_maximum(t_rcv_data data_raw[]);
 t_rcv_data calc_minimum(t_rcv_data data_raw[]);
 void calc_deviation(t_rcv_data data_raw[], t_rcv_data mean);
 
+void print_raw_data(t_rcv_data data_raw[10]);
 void print_stadistics(t_rcv_data mean, t_rcv_data max, t_rcv_data min, t_rcv_data deviation, t_rcv_data data);
 
   /*
@@ -115,7 +116,7 @@ int main(int argc, char *argv[])
 	
 //    printf("\033[2J");      	  // Erase the screen
 	printf("\033[?25l");          // Command to hide cursor
-	char messageBuffer[sizeof(t_rcv_data)];
+	char messageBuffer[sizeof(data[10])];					// Probably should i change the argument of sizeof to data[10]
 	/*
 	This loop is used to recieve data and represent them on the terminal
 	*/
@@ -160,8 +161,11 @@ int main(int argc, char *argv[])
 			printf("%s", color_sensor_msg);
 		}
 */
-		calc_stadistics(data);
-		print_stadistics(data_mean, data_max, data_min, data_deviation, data[9]);
+
+		print_raw_data(data);
+
+		 calc_stadistics(data);
+		 //print_stadistics(data_mean, data_max, data_min, data_deviation, data[9]);
 		fflush(stdout);
 
 		
@@ -391,4 +395,21 @@ void print_stadistics(t_rcv_data mean, t_rcv_data max, t_rcv_data min, t_rcv_dat
 
 		printf("\n---------------------------------------------------------------------\n");
 	}
+}
+
+void print_raw_data(t_rcv_data data_raw[]){
+	
+	for(int i = 0; i < 10; i++){
+		printf("Acceleration: \n\r");
+		printf("X: %.2f / Y: %.2f / Z: %.2f\n\r", data_raw[i].acceleration.acc_x, data_raw[i].acceleration.acc_y, data_raw[i].acceleration.acc_z);
+
+		printf("Colors: \033[?25l \n\r");
+		printf("\033[38;2;255;0;0mR: %.0f  \n\r", data_raw[i].color.red);
+		printf("\033[38;2;0;255;0mG: %.0f  \n\r", data_raw[i].color.green);
+		printf("\033[38;2;0;0;255mB: %.0f  \n\r", data_raw[i].color.blue);
+		printf("\033[38;2;255;255;255m");
+
+		printf("\n---------------------------------------------------------------------\n");
+	}
+	
 }
