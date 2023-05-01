@@ -98,9 +98,14 @@ void inline toggle_value(uint8_t *value){
 }
 
 void start_menu(){
+	
 	printf("\e[8;24;85t"); // Set terminal size
 	fflush(stdin);
+	#ifdef MOSQUITTO
+	printf("*** Sensor measurements by Ruben Agustin & Hao Feng -- Mosquitto client version ***\n\n");
+	#elif NON_MOSQUITTO
 	printf("***************** Sensor measurements by Ruben Agustin & Hao Feng *****************\n\n");
+	#endif
 	fflush(stdout);
 	printf("-- Press 1 to start/disable accelerometer\n");
 	fflush(stdout);

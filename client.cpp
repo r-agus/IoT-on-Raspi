@@ -21,6 +21,8 @@ using namespace std;
 
 #define MAX_STRING_LENGTH 100
 
+#define DEBUG
+
 typedef struct{
 	float acc_x, acc_y, acc_z;
 }t_acc_data;
@@ -30,6 +32,52 @@ typedef struct{
 	t_proc_color color;
 	t_acc_data acceleration;
 }t_send_data;
+
+#ifdef MOSQUITTO
+#include <mosquittopp.h>
+
+class MosquittoClient : public mosqpp::mosquittopp
+{
+public:
+    MosquittoClient(const char *id, const char *host) : mosqpp::mosquittopp(id)
+    {
+        mosqpp::lib_init();
+        connect(host, 1883, 60);
+		#ifdef DEBUG
+		cout << "Trying to connect" << endl;
+		#endif
+	}
+
+    ~MosquittoClient()
+    {
+        disconnect();
+        mosqpp::lib_cleanup();
+    }
+
+    void on_connect(int rc)
+    {
+        if (rc == 0)
+        {
+            cout << "Connected successfully." << endl;
+        }
+        else
+        {
+            cout << "Failed to connect. Error code: " << rc << endl;
+        }
+    }
+
+    void on_disconnect(int rc)
+    {
+        cout << "Disconnected. Error code: " << rc << endl;
+    }
+
+    void on_publish(int mid)
+    {
+        cout << "Message published. Message ID: " << mid << endl;
+    }
+};
+#endif
+
 
 Ticker tick;
 
@@ -61,6 +109,8 @@ int main(int argc, char *argv[])
      cout<<"Please pass the ip adress and port number on which the server is listening."<<endl;
      exit(-1);
   }
+  
+  MosquittoClient client("client_id", argv[1]);
 
   sockaddr_in server;
   int sock_fd;
@@ -112,11 +162,17 @@ int main(int argc, char *argv[])
 			 if(cnt_send == 9){
     		 char buffer[sizeof(send_data)];
     		 memcpy(buffer, reinterpret_cast<char*>(&send_data), sizeof(send_data));		// Serialize the structure
-    		 	if(sendto(sock_fd, buffer, sizeof(buffer), 0, (sockaddr*)&server, sizeof(server))==-1)// Send to the server
-    		 	{
-    				 printf("**********ERROR**********");
-    		 	}
-			 }
+
+			#ifdef MOSQUITTO
+			client.publish(nullptr, "test/topic", sizeof(buffer), buffer);
+    		client.loop();
+			#endif
+
+			#ifdef NON_MOSQUITTO
+			if(sendto(sock_fd, buffer, sizeof(buffer), 0, (sockaddr*)&server, sizeof(server))==-1)// Send to the server
+				printf("**********ERROR**********");
+			#endif
+			}
     	 }
      }
      if(accelerometer_alive && !color_sensor_alive){
@@ -136,7 +192,16 @@ int main(int argc, char *argv[])
 			if(cnt_send == 9){
 	    		 char buffer[sizeof(send_data)];
     			 memcpy(buffer, reinterpret_cast<char*>(&send_data), sizeof(send_data));		// Serialize the structure
-    			 sendto(sock_fd, buffer, sizeof(buffer), 0, (sockaddr*)&server, sizeof(server));// Send to the server
+    			
+				#ifdef MOSQUITTO
+				client.publish(nullptr, "test/topic", sizeof(buffer), buffer);
+    			client.loop();
+				#endif
+
+				#ifdef NON_MOSQUITTO
+				if(sendto(sock_fd, buffer, sizeof(buffer), 0, (sockaddr*)&server, sizeof(server))==-1)// Send to the server
+					printf("**********ERROR**********");
+				#endif
 			}
 		 }
      }
@@ -156,8 +221,18 @@ int main(int argc, char *argv[])
 			if(cnt_send == 9){
 	    		 char buffer[sizeof(send_data)];
     			 memcpy(buffer, reinterpret_cast<char*>(&send_data), sizeof(send_data));		// Serialize the structure
-    			 sendto(sock_fd, buffer, sizeof(buffer), 0, (sockaddr*)&server, sizeof(server));// Send to the server
+    			
+				#ifdef MOSQUITTO
+				client.publish(nullptr, "test/topic", sizeof(buffer), buffer);
+    			client.loop();
+				#endif
+
+				#ifdef NON_MOSQUITTO
+				if(sendto(sock_fd, buffer, sizeof(buffer), 0, (sockaddr*)&server, sizeof(server))==-1)// Send to the server
+				printf("**********ERROR**********");
+				#endif
 				
+				#ifdef DEBUG
 				for(int i = 0; i < 10; i++) cout << endl;
 				cout << "Message sent: " << endl;
 				for(int i = 0; i < 9; i++){
@@ -173,6 +248,7 @@ int main(int argc, char *argv[])
 					cout << bitset<8>(send_data[i].flags) << endl;
 					cout << endl;
 				}
+				#endif
 			}
 		 }
     	 fflush(stdout);
