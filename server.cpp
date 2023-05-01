@@ -8,9 +8,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <iostream>
-
+#include <bitset>
 #include <cmath>
 using namespace std;
+
+
 
 #define MAX_STRING_LENGTH 100
 int sock_fd;
@@ -35,13 +37,13 @@ typedef struct{
 	t_acc_data acceleration;
 }t_rcv_data;
 
-t_rcv_data data[10];
+t_rcv_data rcv_data[10];
 t_rcv_data data_mean, data_max, data_min, data_deviation;
 
 char color_sensor_msg[1500];
 
-void generate_color_sensor_msg(t_rcv_data data);
-void print_accel_msg(t_rcv_data data);
+void generate_color_sensor_msg(t_rcv_data rcv_data);
+void print_accel_msg(t_rcv_data rcv_data);
 
 void calc_stadistics(t_rcv_data data_raw[]);
 t_rcv_data calc_mean(t_rcv_data data_raw[]);
@@ -50,7 +52,7 @@ t_rcv_data calc_minimum(t_rcv_data data_raw[]);
 void calc_deviation(t_rcv_data data_raw[], t_rcv_data mean);
 
 void print_raw_data(t_rcv_data data_raw[10]);
-void print_stadistics(t_rcv_data mean, t_rcv_data max, t_rcv_data min, t_rcv_data deviation, t_rcv_data data);
+void print_stadistics(t_rcv_data mean, t_rcv_data max, t_rcv_data min, t_rcv_data deviation, t_rcv_data rcv_data);
 
   /*
   This thread is used for terminate the thread
@@ -116,56 +118,38 @@ int main(int argc, char *argv[])
 	
 //    printf("\033[2J");      	  // Erase the screen
 	printf("\033[?25l");          // Command to hide cursor
-	char messageBuffer[sizeof(data[10])];					// Probably should i change the argument of sizeof to data[10]
+	char messageBuffer[sizeof(rcv_data)];
 	/*
 	This loop is used to recieve data and represent them on the terminal
 	*/
 	while (true)
 	{
 		int len=sizeof(client);
-
+		#ifdef _DEBUG
+		cout << "Tam messageBuffer = " << sizeof(rcv_data) << endl;
+		#endif
 		// Receive serialized data
 		if (recvfrom(sock_fd, messageBuffer, sizeof(messageBuffer), 0, reinterpret_cast<struct sockaddr*>(&client), (socklen_t*) &len)==-1)
 		{
 			perror("recvfrom:");
 			continue;
 		}
-		printf("\033[H");		// Return to (0,0) position
-		printf("---------------------------------------------------------------------\n\r");
+		// printf("\033[H");		// Return to (0,0) position
+		// printf("---------------------------------------------------------------------\n\r");
 		
 		cout<<"Enter any key and press enter to shut down the server: "<<endl;
 		printf("\n\r");
 
 		// Deserialize data
-		memcpy(reinterpret_cast<char*>(&data), messageBuffer, sizeof(t_rcv_data));
+		memcpy(reinterpret_cast<char*>(&rcv_data), messageBuffer, sizeof(rcv_data));
 
 		cout<<"Data Received from client ("<<inet_ntoa(client.sin_addr)<<"):  "<<messageBuffer<<endl<<endl;
-/*
-		if(data.flags & 0x03){
-			generate_color_sensor_msg(data);
-			print_accel_msg(data);
-			printf("\n");
-			printf("%s\n", color_sensor_msg);
-			//printf("\033[3F");
-			printf("\n\n---------------------------------------------------------------------");
-		}
-		else if(data.flags & 0x01){
-			print_accel_msg(data);
-			printf("\n");
-			printf("\033[3F");		// Move the cursor at the beginning of next line, 4 lines down
-		}
-		else if(data.flags & 0x02){
-			printf("\033[1F");		// Move the cursor at the beginning of next line, 2 line down
-			printf("\n");		
-			generate_color_sensor_msg(data);
-			printf("%s", color_sensor_msg);
-		}
-*/
 
-		print_raw_data(data);
 
-		 calc_stadistics(data);
-		 //print_stadistics(data_mean, data_max, data_min, data_deviation, data[9]);
+		print_raw_data(rcv_data);
+
+		calc_stadistics(rcv_data);
+		print_stadistics(data_mean, data_max, data_min, data_deviation, rcv_data[9]);
 		fflush(stdout);
 
 		
@@ -212,7 +196,7 @@ void calc_stadistics(t_rcv_data data_raw[]){
 }
 
 t_rcv_data calc_mean(t_rcv_data data_raw[]){
-	t_rcv_data sum;
+	t_rcv_data sum = {0};
 	for(int i = 0; i < 10; i++){
 		sum.acceleration.acc_x = sum.acceleration.acc_x + data_raw[i].acceleration.acc_x;
 		sum.acceleration.acc_y = sum.acceleration.acc_y + data_raw[i].acceleration.acc_y;
