@@ -144,16 +144,14 @@ int main(int argc, char *argv[])
 		cout<<"Data Received from client ("<<inet_ntoa(client.sin_addr)<<"):  "<<messageBuffer<<endl<<endl;
 
 		array_rcv_data[cnt_data_rcv] = rcv_data;
-		cnt_data_rcv = (cnt_data_rcv < 10) ? cnt_data_rcv + 1: 0;
 		
-		if (cnt_data_rcv == 10){
+		if (cnt_data_rcv == 10){	// When we have 10 samples
 			print_raw_data(array_rcv_data);
-
 			calc_stadistics(array_rcv_data);
 			print_stadistics(data_mean, data_max, data_min, data_deviation, array_rcv_data[9]);
 			fflush(stdout);
 		}
-		
+		cnt_data_rcv = (cnt_data_rcv < 10) ? cnt_data_rcv + 1: 0;
 		sleep(1);			// Sleep for 1 second
 		
 //		if (sendto(sock_fd, (void*) messageBuffer, (size_t) strlen(messageBuffer)+1, 0, (sockaddr*) &client, (socklen_t) len)==-1)
