@@ -37,7 +37,7 @@ typedef struct{
 	t_acc_data acceleration;
 }t_rcv_data;
 
-t_rcv_data rcv_data[10];
+t_rcv_data rcv_data;
 t_rcv_data data_mean, data_max, data_min, data_deviation;
 
 char color_sensor_msg[1500];
@@ -51,7 +51,7 @@ t_rcv_data calc_maximum(t_rcv_data data_raw[]);
 t_rcv_data calc_minimum(t_rcv_data data_raw[]);
 void calc_deviation(t_rcv_data data_raw[], t_rcv_data mean);
 
-void print_raw_data(t_rcv_data data_raw[10]);
+void print_raw_data(t_rcv_data data_raw);
 void print_stadistics(t_rcv_data mean, t_rcv_data max, t_rcv_data min, t_rcv_data deviation, t_rcv_data rcv_data);
 
   /*
@@ -148,8 +148,8 @@ int main(int argc, char *argv[])
 
 		print_raw_data(rcv_data);
 
-		calc_stadistics(rcv_data);
-		print_stadistics(data_mean, data_max, data_min, data_deviation, rcv_data[9]);
+//		calc_stadistics(rcv_data);
+//		print_stadistics(data_mean, data_max, data_min, data_deviation, rcv_data[9]);
 		fflush(stdout);
 
 		
@@ -381,7 +381,7 @@ void print_stadistics(t_rcv_data mean, t_rcv_data max, t_rcv_data min, t_rcv_dat
 	}
 }
 
-void print_raw_data(t_rcv_data data_raw[]){
+void print_raw_data(t_rcv_data data_raw){
 	
 	for(int i = 0; i < 10; i++){
 		printf("Acceleration: \n\r");
