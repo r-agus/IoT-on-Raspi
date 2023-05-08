@@ -13,7 +13,6 @@
 using namespace std;
 
 
-
 #define MAX_STRING_LENGTH 100
 int sock_fd;
 
@@ -38,9 +37,11 @@ typedef struct{
 }t_rcv_data;
 
 t_rcv_data rcv_data;
+t_rcv_data array_rcv_data[10];
 t_rcv_data data_mean, data_max, data_min, data_deviation;
 
 char color_sensor_msg[1500];
+int cnt_data_rcv;
 
 void generate_color_sensor_msg(t_rcv_data rcv_data);
 void print_accel_msg(t_rcv_data rcv_data);
@@ -51,7 +52,7 @@ t_rcv_data calc_maximum(t_rcv_data data_raw[]);
 t_rcv_data calc_minimum(t_rcv_data data_raw[]);
 void calc_deviation(t_rcv_data data_raw[], t_rcv_data mean);
 
-void print_raw_data(t_rcv_data data_raw);
+void print_raw_data(t_rcv_data data_raw[10]);
 void print_stadistics(t_rcv_data mean, t_rcv_data max, t_rcv_data min, t_rcv_data deviation, t_rcv_data rcv_data);
 
   /*
@@ -73,7 +74,7 @@ void* terminatorThread(void*)
 
 int main(int argc, char *argv[])
 {
-
+	cnt_data_rcv = 0;
 	if (argc==1)
 	{
 		cout<<"Please pass the port number on which you want the server to listen."<<endl;
@@ -116,7 +117,6 @@ int main(int argc, char *argv[])
 		exit(-1);
 	}
 	
-//    printf("\033[2J");      	  // Erase the screen
 	printf("\033[?25l");          // Command to hide cursor
 	char messageBuffer[sizeof(rcv_data)];
 	/*
@@ -134,8 +134,6 @@ int main(int argc, char *argv[])
 			perror("recvfrom:");
 			continue;
 		}
-		// printf("\033[H");		// Return to (0,0) position
-		// printf("---------------------------------------------------------------------\n\r");
 		
 		cout<<"Enter any key and press enter to shut down the server: "<<endl;
 		printf("\n\r");
@@ -145,14 +143,18 @@ int main(int argc, char *argv[])
 
 		cout<<"Data Received from client ("<<inet_ntoa(client.sin_addr)<<"):  "<<messageBuffer<<endl<<endl;
 
-
-		print_raw_data(rcv_data);
-
-//		calc_stadistics(rcv_data);
-//		print_stadistics(data_mean, data_max, data_min, data_deviation, rcv_data[9]);
-		fflush(stdout);
-
+		array_rcv_data[cnt_data_rcv] = rcv_data;
+		cnt_data_rcv = (cnt_data_rcv < 10) ? cnt_data_rcv + 1: 0;
 		
+		if (cnt_data_rcv == 10){
+			print_raw_data(array_rcv_data);
+
+			calc_stadistics(array_rcv_data);
+			print_stadistics(data_mean, data_max, data_min, data_deviation, array_rcv_data[9]);
+			fflush(stdout);
+		}
+		
+		sleep(1);			// Sleep for 1 second
 		
 //		if (sendto(sock_fd, (void*) messageBuffer, (size_t) strlen(messageBuffer)+1, 0, (sockaddr*) &client, (socklen_t) len)==-1)
 //		{
@@ -185,9 +187,6 @@ void print_accel_msg(t_rcv_data data){
 	printf("Acceleration: x = %.2f, y = %.2f, z = %.2f\n\r", data.acceleration.acc_x, data.acceleration.acc_y, data.acceleration.acc_z);
 }
 
-/*
-		To be tested
-*/
 void calc_stadistics(t_rcv_data data_raw[]){
 	data_mean = calc_mean(data_raw);
 	data_max = calc_maximum(data_raw);
