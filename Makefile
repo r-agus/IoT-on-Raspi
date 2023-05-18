@@ -19,7 +19,7 @@ CPPFLAGS = -DOPTION_4
 OBJS = $(SRCS:.cpp=.o)
 
 # Executable
-EXECUTABLE = mosquitto_client
+EXECUTABLE = client
 
 # Targets
 all: $(EXECUTABLE)

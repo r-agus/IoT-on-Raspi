@@ -46,7 +46,7 @@ void acceleration(){
     write_acc_register(fd, 0x19, 0x08);
 
     while (accelerometer_alive){
-        sleep(3);
+        sleep(1);
         read_acceleration(fd, rd_buf);
 
         atomic_exchange(&acc_data_ready, 0);

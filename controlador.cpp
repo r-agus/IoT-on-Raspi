@@ -14,8 +14,6 @@
 void start_menu();
 void* start_accelerometer(void* arg);
 void* start_color_sensor(void* arg);
-
-
 void toggle_value(uint8_t *value);
 
 // Thread stuff
